@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Nexus OS - Future Retail | Barreiras & Formosa</title>
+    <meta name="description" content="Nexus OS - A nova era do varejo em Barreiras e Formosa. Compre Smartphones, Notebooks e Games com retirada imediata.">
+    <meta name="keywords" content="iPhone, Samsung, PS5, Barreiras, Formosa, Tecnologia, Loja Local, AKNOTECH">
+    <meta property="og:title" content="Nexus OS - Future Retail">
+    <meta property="og:description" content="Estoque sincronizado em tempo real. Confira as ofertas em Barreiras e Formosa.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#020202">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#020202',
+                            card: '#0a0a0a',
+                            border: '#1f1f1f',
+                            accent: '#3b82f6',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'zoom-in': 'zoomIn 0.2s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        zoomIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background-color: #020202;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Utilities */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .spotlight-group:hover .spotlight-card::before { opacity: 1; }
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.1), transparent 40%);
+            z-index: 0;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden">
+
+    <div id="app"></div>
+
+    <script>
+        // --- DATA & PERSISTENCE (LocalStorage) ---
+        
+        // 1. Produtos (Estático)
+        const products = [
+            { id: 1, name: "iPhone 15 Pro Max", brand: "Apple", category: "smartphone", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=500", specs: "256GB Titanium", description: "O iPhone mais poderoso já feito. Com design em titânio aeroespacial, chip A17 Pro revolucionário e o sistema de câmera mais avançado em um iPhone." },
+            { id: 2, name: "MacBook Air M2", brand: "Apple", category: "laptop", image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&q=80&w=500", specs: "M2 Chip, Midnight", description: "Redesenhado em torno do chip M2 de última geração, o MacBook Air é incrivelmente fino e traz velocidade e eficiência excepcionais em sua estrutura de alumínio resistente." },
+            { id: 3, name: "Galaxy S24 Ultra", brand: "Samsung", category: "smartphone", image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&q=80&w=500", specs: "AI, Titanium Gray", description: "Entre na nova era da IA móvel. Com Galaxy AI, titânio resistente e a S Pen integrada, o S24 Ultra escreve um novo capítulo na história dos smartphones." },
+            { id: 4, name: "Sony WH-1000XM5", brand: "Sony", category: "audio", image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=500", specs: "Noise Cancelling", description: "O melhor cancelamento de ruído do mercado ficou ainda melhor. Design leve e elegante com som de alta resolução e chamadas cristalinas." },
+            { id: 5, name: "PlayStation 5 Slim", brand: "Sony", category: "gaming", image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&q=80&w=500", specs: "Digital Edition", description: "Jogar não tem limites. Experimente carregamento extremamente rápido com SSD de ultra-velocidade, imersão mais profunda com suporte a feedback tátil." },
+        ];
+
+        // 2. Carregar Estoque Salvo ou Usar Padrão
+        const savedInventory = localStorage.getItem('nexus_inventory');
+        const initialInventory = {
+            'barreiras': { 1: { qty: 14, price: 8299.00 }, 2: { qty: 3, price: 7499.00 }, 3: { qty: 8, price: 7999.00 }, 4: { qty: 15, price: 2299.00 }, 5: { qty: 0, price: 3599.00 } },
+            'formosa': { 1: { qty: 25, price: 8499.00 }, 2: { qty: 0, price: 7599.00 }, 3: { qty: 12, price: 8100.00 }, 4: { qty: 10, price: 2350.00 }, 5: { qty: 5, price: 3650.00 } }
+        };
+        const inventoryDB = savedInventory ? JSON.parse(savedInventory) : initialInventory;
+
+        // 3. Carregar Carrinho Salvo
+        const savedCart = localStorage.getItem('nexus_cart');
+
+        let state = { 
+            view: 'client', 
+            location: 'barreiras', 
+            cart: savedCart ? JSON.parse(savedCart) : [], 
+            isCartOpen: false, 
+            filter: 'all', 
+            searchQuery: '',
+            modal: null, // null, 'product', 'checkout'
+            selectedProductId: null
+        };
+
+        // --- CORE ---
+        function init() {
+            lucide.createIcons();
+            renderApp();
+            setupSpotlight();
+        }
+
+        // Função para salvar dados no navegador
+        function saveData() {
+            localStorage.setItem('nexus_inventory', JSON.stringify(inventoryDB));
+            localStorage.setItem('nexus_cart', JSON.stringify(state.cart));
+        }
+
+        function setupSpotlight() {
+            document.addEventListener('mousemove', e => {
+                const cards = document.getElementsByClassName('spotlight-card');
+                for (const card of cards) {
+                    const rect = card.getBoundingClientRect();
+                    card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                    card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                }
+            });
+        }
+
+        function switchView(v) {
+            document.body.style.opacity = '0';
+            setTimeout(() => { state.view = v; state.isCartOpen = false; state.modal = null; renderApp(); document.body.style.opacity = '1'; window.scrollTo(0,0); }, 200);
+        }
+
+        function setLocation(l) { state.location = l; state.cart = []; saveData(); renderApp(); showToast(`Loja: ${l.toUpperCase()}`); }
+        function toggleCart() { state.isCartOpen = !state.isCartOpen; renderApp(); }
+        function setFilter(c) { state.filter = c; renderApp(); }
+        function handleSearch(q) { state.searchQuery = q.toLowerCase(); renderApp(); setTimeout(() => { document.getElementById('search-input')?.focus(); document.getElementById('search-input').value = q; }, 0); }
+        
+        function openProduct(id) { state.selectedProductId = id; state.modal = 'product'; renderApp(); }
+        function openCheckout() { 
+            if(state.cart.length === 0) return showToast("Carrinho vazio!", 'error');
+            state.isCartOpen = false; 
+            state.modal = 'checkout'; 
+            renderApp(); 
+        }
+        function closeModal() { state.modal = null; renderApp(); }
+
+        function addToCart(id) {
+            const item = state.cart.find(i => i.id === id);
+            const stock = inventoryDB[state.location][id].qty;
+            if (item) {
+                if(item.qty < stock) { item.qty++; showToast("Atualizado!"); } else showToast("Limite atingido", 'error');
+            } else {
+                state.cart.push({id, qty: 1}); showToast("Adicionado!");
+            }
+            saveData(); // Salva carrinho
+            renderApp(); 
+        }
+        
+        function removeFromCart(id) { 
+            state.cart = state.cart.filter(i => i.id !== id); 
+            saveData(); // Salva carrinho
+            renderApp(); 
+        }
+        
+        function formatMoney(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+        function sendToWhatsApp() {
+            const name = document.getElementById('checkout-name').value;
+            const payMethod = document.getElementById('checkout-payment').value;
+            if(!name) return showToast("Por favor, digite seu nome", 'error');
+
+            let msg = `*NOVO PEDIDO - NEXUS OS*\n`;
+            msg += `👤 Cliente: ${name}\n`;
+            msg += `📍 Loja: ${state.location.toUpperCase()}\n`;
+            msg += `💳 Pagamento: ${payMethod}\n\n`;
+            msg += `*ITENS:*\n`;
+            
+            let total = 0;
+            state.cart.forEach(item => {
+                const p = products.find(prod => prod.id === item.id);
+                const price = inventoryDB[state.location][item.id].price;
+                const subtotal = price * item.qty;
+                total += subtotal;
+                msg += `- ${item.qty}x ${p.name} (${formatMoney(price)})\n`;
+            });
+            
+            msg += `\n*TOTAL: ${formatMoney(total)}*`;
+
+            // Número da AKNOTECH (Ajustado conforme contexto)
+            const url = `https://wa.me/5561999133322?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+            
+            state.cart = [];
+            state.modal = null;
+            saveData(); // Limpa carrinho salvo
+            renderApp();
+            showToast("Pedido enviado! Verifique seu WhatsApp.");
+        }
+
+        function renderApp() {
+            const app = document.getElementById('app');
+            app.innerHTML = state.view === 'client' ? getClientHTML() : getAdminHTML();
+            lucide.createIcons();
+        }
+
+        // --- CLIENT UI ---
+        function getClientHTML() {
+            const locName = state.location === 'barreiras' ? 'Barreiras' : 'Formosa';
+            const cartQty = state.cart.reduce((a, b) => a + b.qty, 0);
+            
+            const filtered = products.filter(p => 
+                (state.filter === 'all' || p.category === state.filter) && 
+                (p.name.toLowerCase().includes(state.searchQuery) || p.brand.toLowerCase().includes(state.searchQuery))
+            );
+
+            // Modals Logic
+            let modalHTML = '';
+            if (state.modal === 'product') {
+                const p = products.find(prod => prod.id === state.selectedProductId);
+                const stock = inventoryDB[state.location][p.id];
+                const active = stock.qty > 0;
+                modalHTML = `
+                    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
+                        <div class="relative bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row shadow-2xl animate-zoom-in">
+                            <button onclick="closeModal()" class="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-white hover:bg-white/10"><i data-lucide="x" class="w-6 h-6"></i></button>
+                            <div class="w-full md:w-1/2 bg-[#0c0c0c] flex items-center justify-center p-8 md:p-12">
+                                <img src="${p.image}" class="w-full max-w-sm object-contain drop-shadow-2xl">
+                            </div>
+                            <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col">
+                                <span class="text-blue-500 font-mono text-xs uppercase tracking-widest mb-2">${p.brand}</span>
+                                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">${p.name}</h2>
+                                <div class="flex items-center gap-4 mb-6">
+                                    <span class="text-2xl font-mono text-white">${formatMoney(stock.price)}</span>
+                                    ${active ? `<span class="bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> Em Estoque (${stock.qty})</span>` : '<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-bold">Esgotado</span>'}
+                                </div>
+                                <p class="text-gray-400 leading-relaxed mb-8 text-lg">${p.description}</p>
+                                <div class="mt-auto pt-6 border-t border-white/5">
+                                    <h4 class="text-sm font-bold text-white mb-2 uppercase">Especificações</h4>
+                                    <p class="text-gray-500 font-mono text-sm mb-6">${p.specs}</p>
+                                    <button onclick="addToCart(${p.id}); closeModal()" ${!active ? 'disabled' : ''} class="w-full bg-white text-black hover:bg-blue-600 hover:text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] disabled:opacity-50 disabled:cursor-not-allowed">
+                                        ${active ? 'Adicionar à Sacola' : 'Indisponível'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (state.modal === 'checkout') {
+                const total = state.cart.reduce((a,b)=>a+(b.qty*inventoryDB[state.location][b.id].price),0);
+                modalHTML = `
+                    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
+                        <div class="relative bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-md p-8 shadow-2xl animate-zoom-in">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold text-white">Finalizar Pedido</h2>
+                                <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                            </div>
+                            <div class="space-y-4 mb-6">
+                                <div>
+                                    <label class="block text-xs font-mono text-gray-500 uppercase mb-2">Seu Nome</label>
+                                    <input type="text" id="checkout-name" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none transition" placeholder="Ex: João Silva">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono text-gray-500 uppercase mb-2">Forma de Pagamento</label>
+                                    <select id="checkout-payment" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none transition cursor-pointer">
+                                        <option value="Pix (5% desc)">Pix (5% desconto)</option>
+                                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                        <option value="Dinheiro">Dinheiro na Retirada</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="bg-blue-900/10 border border-blue-500/20 rounded-xl p-4 mb-6">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">Total a pagar:</span>
+                                    <span class="font-bold text-white text-lg">${formatMoney(total)}</span>
+                                </div>
+                                <p class="text-xs text-blue-400">Retirada em: ${state.location.toUpperCase()}</p>
+                            </div>
+                            <button onclick="sendToWhatsApp()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2">
+                                <i data-lucide="message-circle" class="w-5 h-5"></i> Enviar Pedido no WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                ${modalHTML}
+                
+                <nav class="fixed top-0 w-full z-40 glass-panel border-x-0 border-t-0 h-20 transition-all duration-300">
+                    <div class="container mx-auto px-4 h-full flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-500 flex items-center justify-center border border-blue-500/30">
+                                <i data-lucide="zap" class="w-5 h-5 fill-current"></i>
+                            </div>
+                            <span class="font-mono font-bold text-lg hidden md:block">NEXUS<span class="text-blue-500">_OS</span></span>
+                        </div>
+
+                        <div class="hidden md:flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2 w-96 focus-within:border-blue-500/50 transition">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-500 mr-2"></i>
+                            <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Buscar..." class="bg-transparent border-none outline-none text-sm text-gray-200 w-full">
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="relative group">
+                                <button class="flex items-center gap-2 text-xs font-mono text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-transparent hover:border-white/10 hover:bg-white/5 transition">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-blue-500"></i> ${locName.toUpperCase()}
+                                </button>
+                                <div class="absolute top-full right-0 mt-2 w-48 glass-panel rounded-xl p-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform translate-y-2 group-hover:translate-y-0">
+                                    <button onclick="setLocation('barreiras')" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/10 rounded-lg">Barreiras</button>
+                                    <button onclick="setLocation('formosa')" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/10 rounded-lg">Formosa</button>
+                                </div>
+                            </div>
+
+                            <button onclick="toggleCart()" class="relative p-2 text-gray-400 hover:text-white transition">
+                                <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+                                ${cartQty > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">${cartQty}</span>` : ''}
+                            </button>
+                            
+                            <button onclick="switchView('admin')" class="hidden md:block p-2 text-gray-600 hover:text-blue-500 transition"><i data-lucide="shield" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+                </nav>
+
+                <section class="relative min-h-[90vh] flex items-center justify-center pt-20 overflow-hidden">
+                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/80 to-transparent"></div>
+                    
+                    <div class="relative z-10 container mx-auto px-4 text-center mt-10">
+                        <span class="inline-block py-1 px-4 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-mono mb-6 animate-fade-in-up" style="animation-delay: 0.1s">
+                            SISTEMA MULTI-LOCAL V3.0
+                        </span>
+                        
+                        <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
+                            O Futuro está <br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-pulse-slow">Sincronizado</span>
+                        </h1>
+                        
+                        <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up" style="animation-delay: 0.3s">
+                            Experimente a nova era do varejo em <strong>${locName}</strong>. Tecnologia de ponta, disponibilidade em tempo real e entrega imediata.
+                        </p>
+                        
+                        <div class="flex flex-col md:flex-row gap-4 justify-center animate-fade-in-up" style="animation-delay: 0.4s">
+                            <button onclick="document.getElementById('estoque').scrollIntoView({behavior: 'smooth'})" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold transition shadow-[0_0_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2">
+                                Ver Produtos <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                            </button>
+                            <button class="px-8 py-4 glass-panel hover:bg-white/10 text-white rounded-full font-bold transition flex items-center justify-center gap-2">
+                                <i data-lucide="play-circle" class="w-5 h-5"></i> Como Funciona
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <main id="estoque" class="container mx-auto px-4 py-24">
+                    
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2">Estoque <span class="text-blue-500">Inteligente</span></h2>
+                            <p class="text-gray-500">Visualizando catálogo de <strong>${locName}</strong></p>
+                        </div>
+                        
+                        <div class="flex gap-2 overflow-x-auto pb-2 hide-scroll">
+                            ${['all', 'smartphone', 'laptop', 'audio', 'gaming'].map(c => `
+                                <button onclick="setFilter('${c}')" class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition whitespace-nowrap ${state.filter === c ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}">
+                                    ${c === 'all' ? 'Todos' : c}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 spotlight-group">
+                        ${filtered.map((p, i) => {
+                            const stock = inventoryDB[state.location][p.id];
+                            const active = stock.qty > 0;
+                            return `
+                                <div class="spotlight-card relative bg-[#0a0a0a] border border-white/5 rounded-3xl p-1 overflow-hidden group fade-in-up" style="animation-delay: ${i*0.05}s">
+                                    <div class="relative bg-[#0c0c0c] rounded-2xl overflow-hidden h-full flex flex-col z-10">
+                                        <div class="h-64 relative flex items-center justify-center bg-gradient-to-b from-white/5 to-transparent cursor-pointer" onclick="openProduct(${p.id})">
+                                            <div class="absolute top-4 left-4 z-20">
+                                                ${!active ? '<span class="px-3 py-1 rounded-lg text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20">ESGOTADO</span>' : stock.qty < 5 ? `<span class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Restam ${stock.qty}</span>` : ''}
+                                            </div>
+                                            <img src="${p.image}" class="w-3/5 object-contain transition duration-500 group-hover:scale-110 drop-shadow-2xl">
+                                            <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300">
+                                                <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full text-sm font-bold border border-white/20">Ver Detalhes</span>
+                                            </div>
+                                        </div>
+                                        <div class="p-6 flex flex-col flex-1">
+                                            <div class="mb-4 cursor-pointer" onclick="openProduct(${p.id})">
+                                                <p class="text-[10px] font-mono text-blue-500 mb-1 uppercase tracking-widest">${p.brand}</p>
+                                                <h3 class="font-bold text-xl text-white group-hover:text-blue-400 transition">${p.name}</h3>
+                                                <p class="text-sm text-gray-500 mt-1 line-clamp-1">${p.specs}</p>
+                                            </div>
+                                            <div class="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
+                                                <div>
+                                                    <p class="text-[10px] text-gray-500 uppercase font-bold">À Vista</p>
+                                                    <p class="font-mono text-xl text-white">${formatMoney(stock.price)}</p>
+                                                </div>
+                                                <button onclick="addToCart(${p.id})" ${!active?'disabled':''} class="w-12 h-12 rounded-xl flex items-center justify-center transition active:scale-95 ${active ? 'bg-white text-black hover:bg-blue-600 hover:text-white hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]' : 'bg-white/5 text-gray-600 cursor-not-allowed'}">
+                                                    <i data-lucide="plus" class="w-6 h-6"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </main>
+
+                <section class="container mx-auto px-4 pb-24">
+                    <div class="glass-panel rounded-3xl p-8 md:p-16 relative overflow-hidden text-center group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-green-900/20 via-transparent to-blue-900/20 opacity-50 group-hover:opacity-100 transition duration-700"></div>
+                        
+                        <div class="relative z-10 max-w-2xl mx-auto">
+                            <div class="w-20 h-20 bg-green-500/10 text-green-500 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+                                <i data-lucide="message-circle" class="w-10 h-10"></i>
+                            </div>
+                            <h2 class="text-3xl md:text-5xl font-bold mb-6">Ofertas VIP no WhatsApp</h2>
+                            <p class="text-gray-400 text-lg mb-10 leading-relaxed">
+                                Receba cupons exclusivos e saiba antes de todo mundo quando o estoque de <strong>Barreiras</strong> e <strong>Formosa</strong> for renovado. Sem spam.
+                            </p>
+                            <button class="bg-green-600 hover:bg-green-500 text-white px-10 py-5 rounded-full font-bold transition flex items-center justify-center gap-3 mx-auto shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_40px_rgba(34,197,94,0.6)] hover:-translate-y-1">
+                                <span class="text-lg">Entrar no Grupo VIP</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                            </button>
+                            <p class="text-xs text-gray-600 mt-6">Mais de 1.200 clientes já participam.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <footer class="border-t border-white/5 bg-[#010101] pt-20 pb-10">
+                    <div class="container mx-auto px-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                            <div class="col-span-1 lg:col-span-2">
+                                <span class="font-mono font-bold text-2xl tracking-tight block mb-6">NEXUS<span class="text-blue-500">_OS</span></span>
+                                <p class="text-gray-500 max-w-md text-lg leading-relaxed">
+                                    Redefinindo a experiência de compra local com tecnologia global. Estoque real, sem surpresas.
+                                </p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-6">Explorar</h4>
+                                <ul class="space-y-4 text-gray-500 text-sm">
+                                    <li><a href="#" class="hover:text-blue-500 transition flex items-center gap-2">Lançamentos <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span></a></li>
+                                    <li><a href="#" class="hover:text-white transition">Smartphones</a></li>
+                                    <li><a href="#" class="hover:text-white transition">Notebooks</a></li>
+                                    <li><a href="#" class="hover:text-white transition">Acessórios</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-6">Ajuda</h4>
+                                <ul class="space-y-4 text-gray-500 text-sm">
+                                    <li><a href="#" class="hover:text-white transition">Rastrear Pedido</a></li>
+                                    <li><a href="#" class="hover:text-white transition">Política de Privacidade</a></li>
+                                    <li><a href="#" class="hover:text-white transition">Termos de Uso</a></li>
+                                    <li><a href="#" class="hover:text-white transition">Fale Conosco</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                            <p class="text-gray-600 text-sm">&copy; 2024 Nexus OS Ltda. CNPJ 00.000.000/0001-00</p>
+                            <div class="flex gap-6">
+                                <a href="#" class="text-gray-500 hover:text-white transition"><i data-lucide="instagram" class="w-5 h-5"></i></a>
+                                <a href="#" class="text-gray-500 hover:text-white transition"><i data-lucide="twitter" class="w-5 h-5"></i></a>
+                                <a href="#" class="text-gray-500 hover:text-white transition"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+
+                <div class="fixed inset-0 z-50 transition-all duration-300 ${state.isCartOpen ? 'visible' : 'invisible'}">
+                    <div onclick="toggleCart()" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ${state.isCartOpen ? 'opacity-100' : 'opacity-0'}"></div>
+                    <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-[#0a0a0a] border-l border-white/10 shadow-2xl transition-transform duration-300 ${state.isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col">
+                        <div class="p-6 border-b border-white/10 flex items-center justify-between bg-[#0c0c0c]">
+                            <h2 class="font-mono text-lg font-bold">Sacola <span class="text-blue-500">(${cartQty})</span></h2>
+                            <button onclick="toggleCart()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                            ${state.cart.length ? state.cart.map(i => {
+                                const p = products.find(prod => prod.id === i.id);
+                                const price = inventoryDB[state.location][i.id].price;
+                                return `
+                                    <div class="flex gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                                        <div class="w-16 h-16 bg-black rounded-lg p-1"><img src="${p.image}" class="w-full h-full object-contain"></div>
+                                        <div class="flex-1">
+                                            <h4 class="text-sm font-bold text-white mb-1">${p.name}</h4>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs text-gray-400">${formatMoney(price)} x ${i.qty}</span>
+                                                <button onclick="removeFromCart(${i.id})" class="text-xs text-red-400">Remover</button>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            }).join('') : '<div class="h-full flex flex-col items-center justify-center text-gray-600"><i data-lucide="shopping-bag" class="w-12 h-12 mb-2 opacity-20"></i><p>Vazia</p></div>'}
+                        </div>
+                        <div class="p-6 bg-[#0c0c0c] border-t border-white/10">
+                            <div class="flex justify-between mb-4 text-sm"><span class="text-gray-400">Total</span><span class="font-mono font-bold text-xl text-white">${formatMoney(state.cart.reduce((a,b)=>a+(b.qty*inventoryDB[state.location][b.id].price),0))}</span></div>
+                            <button onclick="openCheckout()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-[0_0_20px_rgba(37,99,235,0.3)]">Finalizar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="switchView('admin')" class="md:hidden fixed bottom-6 left-6 z-30 w-12 h-12 rounded-full bg-gray-800 text-gray-400 border border-white/10 flex items-center justify-center shadow-lg"><i data-lucide="shield" class="w-5 h-5"></i></button>
+            `;
+        }
+
+        // --- ADMIN UI ---
+        function getAdminHTML() {
+            let totalVal = 0, totalStock = 0;
+            products.forEach(p => { const s = inventoryDB[state.location][p.id]; totalVal += s.qty * s.price; totalStock += s.qty; });
+
+            return `
+                <div class="min-h-screen bg-[#050505] flex">
+                    <aside class="hidden lg:flex w-64 border-r border-white/5 flex-col fixed h-full bg-[#050505]">
+                        <div class="h-20 flex items-center px-6 border-b border-white/5"><i data-lucide="layout-dashboard" class="text-blue-500 w-6 h-6 mr-3"></i><span class="font-mono font-bold text-lg">NEXUS<span class="text-gray-500">_ADMIN</span></span></div>
+                        <div class="p-4 space-y-1 mt-4">
+                            <div class="text-xs font-mono text-gray-600 uppercase mb-2 px-3">Gestão</div>
+                            <a href="#" class="flex items-center px-3 py-2 bg-blue-600/10 text-blue-400 border border-blue-600/20 rounded-lg"><i data-lucide="box" class="w-4 h-4 mr-3"></i> Estoque</a>
+                            <a href="#" class="flex items-center px-3 py-2 text-gray-400 hover:text-white rounded-lg transition"><i data-lucide="users" class="w-4 h-4 mr-3"></i> CRM</a>
+                        </div>
+                        <div class="mt-auto p-4 border-t border-white/5"><button onclick="switchView('client')" class="flex items-center w-full px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="log-out" class="w-4 h-4 mr-3"></i> Sair</button></div>
+                    </aside>
+                    <main class="lg:ml-64 flex-1">
+                        <header class="h-20 border-b border-white/5 bg-[#050505]/80 backdrop-blur sticky top-0 z-30 flex items-center justify-between px-6">
+                            <div class="lg:hidden flex items-center gap-2"><i data-lucide="shield" class="text-blue-500"></i><span class="font-bold">ADMIN</span></div>
+                            <div class="ml-auto flex items-center bg-white/5 rounded-lg px-3 py-1.5 border border-white/10"><i data-lucide="map-pin" class="w-4 h-4 text-blue-500 mr-2"></i><select onchange="setLocation(this.value)" class="bg-transparent text-sm text-gray-300 outline-none cursor-pointer"><option value="barreiras" ${state.location==='barreiras'?'selected':''} class="bg-black">Barreiras</option><option value="formosa" ${state.location==='formosa'?'selected':''} class="bg-black">Formosa</option></select></div>
+                        </header>
+                        <div class="p-6 md:p-10 max-w-7xl mx-auto pb-24">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl"><p class="text-xs font-mono text-gray-500 uppercase mb-2">Valor em Estoque</p><h3 class="text-3xl font-bold text-white">${formatMoney(totalVal)}</h3></div>
+                                <div class="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl"><p class="text-xs font-mono text-gray-500 uppercase mb-2">Total Itens</p><h3 class="text-3xl font-bold text-white">${totalStock}</h3></div>
+                                <div class="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl flex items-center gap-4">
+                                    <div class="flex items-end gap-1 h-10"><div class="w-1.5 bg-blue-900 h-4 rounded"></div><div class="w-1.5 bg-blue-500 h-8 rounded animate-pulse"></div><div class="w-1.5 bg-blue-900 h-5 rounded"></div></div>
+                                    <div><p class="text-xs font-mono text-gray-500 uppercase">Status</p><p class="text-sm text-green-400 font-bold">Online</p></div>
+                                </div>
+                            </div>
+                            <div class="bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-white/5 text-xs font-mono text-gray-500 uppercase"><tr><th class="p-4 pl-6">Produto</th><th class="p-4">Qtd</th><th class="p-4">Preço</th><th class="p-4 text-right pr-6">Ação</th></tr></thead>
+                                    <tbody class="divide-y divide-white/5 text-sm">${products.map(p => {
+                                        const s = inventoryDB[state.location][p.id];
+                                        return `<tr class="hover:bg-white/5 transition"><td class="p-4 pl-6 flex items-center gap-3"><img src="${p.image}" class="w-8 h-8 rounded bg-white/10 p-0.5 object-contain"><span class="font-bold text-white">${p.name}</span></td><td class="p-4"><div class="flex items-center bg-black border border-white/10 w-fit rounded"><button onclick="updateStock(${p.id},-1,0)" class="px-2 text-gray-500 hover:text-white">-</button><span class="w-8 text-center font-mono font-bold">${s.qty}</span><button onclick="updateStock(${p.id},1,0)" class="px-2 text-gray-500 hover:text-white">+</button></div></td><td class="p-4"><input type="number" value="${s.price}" class="bg-transparent w-20 outline-none border-b border-transparent focus:border-blue-500 text-gray-300 transition" onchange="updateStock(${p.id},0,this.value)"></td><td class="p-4 pr-6 text-right"><i data-lucide="more-horizontal" class="w-4 h-4 text-gray-500"></i></td></tr>`;
+                                    }).join('')}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="lg:hidden fixed bottom-0 w-full bg-[#0a0a0a] border-t border-white/5 flex justify-around p-4 z-40"><button onclick="switchView('client')" class="flex flex-col items-center gap-1 text-red-400"><i data-lucide="log-out" class="w-5 h-5"></i><span class="text-[10px]">Sair</span></button></div>
+                    </main>
+                </div>
+            `;
+        }
+
+        // --- ACTIONS ---
+        function updateStock(id, q, p) {
+            const loc = state.location;
+            if (q !== 0) inventoryDB[loc][id].qty = Math.max(0, inventoryDB[loc][id].qty + q);
+            if (p !== 0) { 
+                inventoryDB[loc][id].price = parseFloat(p); 
+                showToast("Preço Salvo"); 
+            }
+            saveData(); // Persistir dados
+            if (p === 0) renderApp();
+        }
+
+        function showToast(m, t='s') {
+            const el = document.createElement('div');
+            el.className = `fixed bottom-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-xl ${t==='error'?'text-red-400 border-red-500/30 bg-red-500/10':'text-blue-400 border-blue-500/30 bg-blue-500/10'}`;
+            el.innerHTML = `<i data-lucide="${t==='error'?'alert-circle':'check-circle'}" class="w-5 h-5"></i><span class="font-medium text-sm">${m}</span>`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
